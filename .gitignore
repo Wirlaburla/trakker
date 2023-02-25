@@ -1,0 +1,11 @@
+build/
+
+*.kdevelop
+*.kdevelop.pcs
+*.kdevses
+
+# Test Modules
+*.mod
+*.xm
+*.s3m
+*.it
