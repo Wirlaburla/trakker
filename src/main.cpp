@@ -10,17 +10,22 @@
 #include <xmp.h>
 #include <ncurses.h>
 
+#define VERSION "0.0.2"
 #define SAMPLERATE 48000
 #define BUFFER_SIZE 250000
 
 static char *note_name[] = { "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B " };
 
+void updateTrack(char* name, char* type);
+void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi);
+
 static char *device = "default";
+int chanOffset = 0; int detail = 0; int vol = 100;
+bool looper = false, is_stopped = false;
 int main(int argc, char *argv[]) {
-	printf("Trakker %s (with libxmp %s)\n", "v0.0.1", xmp_version);
-	int adv, time, key, err, row, pos, chanoffset;
-	bool looper = false;
-	bool is_stopped = false;
+	printf("Trakker %s (with libxmp %s)\n", VERSION, xmp_version);
+	int time, key, err, row, pos;
+	bool fupdate = false;
 	snd_pcm_t *handle;
 	snd_pcm_sframes_t frames;
 	if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
@@ -63,9 +68,10 @@ int main(int argc, char *argv[]) {
 	
 	if (can_change_color() == TRUE) {
 		init_color(COLOR_BLACK, 0, 0, 0);
-	} else { printf("Color changing not supported!"); }
+	} else { printf("Color changing not supported!\n"); }
 	
 	init_pair(1, COLOR_WHITE, COLOR_BLUE); // PLAYHEAD
+	init_pair(2, COLOR_WHITE, COLOR_RED); // PAUSED
 	
 	cbreak();
 	noecho();
@@ -80,25 +86,16 @@ int main(int argc, char *argv[]) {
 	refresh();
 	
 	xmp_get_module_info(c, &mi);
-//	printf("%s (%s)\n", mi.mod->name, mi.mod->type);
 	row = pos = -1;
-	chanoffset = 0;
+	chanOffset = 0;
 	xmp_start_player(c, SAMPLERATE, 0);
-//	show_data(&mi);
 	
-// 	for (int x = 0; x < sizeof(mi.mod->xxo); x++) {
-// 		std::cout << std::hex << (int)mi.mod->xxo[x] << ",";
-// 	}
-// 	std::cout << std::endl;
-	int vchanoff = 0, vadv = 0;
-	adv = 0;
+	updateTrack(mi.mod->name, mi.mod->type);
 	while (true) {
-		int vol = xmp_get_player(c, XMP_PLAYER_VOLUME);
-		mvprintw(0, 0, "%s %s (%s)", is_stopped?"[PAUSED]":"", mi.mod->name, mi.mod->type);
-		int exa = 7+(adv*4);
-		
 		xmp_get_frame_info(c, &fi);
 		if (xmp_play_frame(c) != 0 && !is_stopped) break;
+		if (!looper && fi.loop_count > 0) break;
+		
 		mvprintw(
 			0, COLS-11, 
 			"%02u:%02u/%02u:%02u", 
@@ -108,30 +105,28 @@ int main(int argc, char *argv[]) {
 			(fi.total_time / 1000) % 60
 		);
 		
-		wtimeout(win, 0);
+		keys:
+		wtimeout(win, is_stopped?-1:0);
 		if ((key = wgetch(win)) != 0) {
+			vol = xmp_get_player(c, XMP_PLAYER_VOLUME);
 			switch (key) {
 				case ' ': // Pause/Play
 					time = fi.time;
-					is_stopped = !is_stopped;
-					while(is_stopped) {
-						if ((key = wgetch(win)) == ' ') 
-							is_stopped = !is_stopped;
-					}
+					is_stopped = !is_stopped; 
 					break;
 				case KEY_LEFT: // Move Channels Left
-					if (chanoffset > 0) chanoffset--;
+					if (chanOffset > 0) chanOffset--;
 					break;
 				case KEY_RIGHT: // Move Channels Right
-					if (chanoffset < mi.mod->chn-1) chanoffset++;
+					if (chanOffset < mi.mod->chn-1) chanOffset++;
 					break;
 				case KEY_UP: // Seek Up
-					//xmp_set_position(c, fi.pos-1);
-					fi.row--;
+					if (is_stopped) fi.row--;
+					else xmp_set_position(c, fi.pos-1);
 					break;
 				case KEY_DOWN: // Seek Down
-					//xmp_set_position(c, fi.pos+1);
-					fi.row++;
+					if (is_stopped) fi.row++;
+					else xmp_set_position(c, fi.pos+1);
 					break;
 				case '+':
 					if (vol < 100) xmp_set_player(c, XMP_PLAYER_VOLUME, vol+=5);
@@ -142,118 +137,30 @@ int main(int argc, char *argv[]) {
 				case 'l':
 					looper = !looper;
 					break;
-				case '1': adv = 0; break;
-				case '2': adv = 1; break;
-				case '3': adv = 2; break;
-				case '4': adv = 3; break;
+				case '1': detail = 0; break;
+				case '2': detail = 1; break;
+				case '3': detail = 2; break;
+				case '4': detail = 3; break;
 			};
+			renderRows(win, &mi, &fi);
 		}
-		
-		if (!looper && fi.loop_count > 0) break;
 
 		if (!is_stopped) {
 			frames = snd_pcm_bytes_to_frames(handle, fi.buffer_size);
 			if (snd_pcm_writei(handle, fi.buffer, frames) < 0) {
 				snd_pcm_prepare(handle);
 			}
-		}
 		
- 		if (fi.pos != pos) {
- 			pos = fi.pos;
- 			row = -1;
- 		}
- 		if (!is_stopped && (fi.row != row || vchanoff != chanoffset || vadv != adv)) {
- 			mvprintw(
- 				LINES-1, 0, 
- 				"Pos:%02x Pat:%02x/%02x VOL:%03u%% LOOP:%i +%02u/%02u VIS:%i", 
- 				fi.pos, 
- 				fi.pattern,
- 				mi.mod->pat,
- 				vol,
- 				looper?1:0,
- 				chanoffset,
- 				mi.mod->chn-1,
- 				adv
- 			);
- 			werase(win);
- 			for (int y = 0; y < LINES - 2; y++) {
-                int trow = (fi.row - ((LINES - 2) / 2))+y;
-                if (trow > fi.num_rows || trow < 0) { continue;}
-                if (trow == fi.row) {
-                	wattron(win, COLOR_PAIR(1));
-                	wattron(win, A_BOLD);
-                } else {
-                	wattroff(win, COLOR_PAIR(1));
-                	wattroff(win, A_BOLD);
-                }
-                wmove(win, y, 0);
-                wprintw(win, "%02X", trow);
-                int coff = ((COLS - 2) % exa);
-                int maxcol = -1;
-				for (int i = chanoffset; i < mi.mod->chn; i++) {
-					if (coff+(((i-chanoffset)+1)*exa)+exa > COLS) {
-						maxcol = i;
-						break;
-					}
-					wmove(win, y, coff+((i-chanoffset)*exa)+3);
-					int track = mi.mod->xxp[fi.pattern]->index[i];
-					struct xmp_event event = mi.mod->xxt[track]->event[trow];
-					if (i > 0 && i == chanoffset) wprintw(win, "<");
-					else wprintw(win, "|");
-					if (event.note > 0x80) {
-						wprintw(win, "=== ");
-					} else if (event.note > 0) {
-						int note = event.note - 1;
-						wprintw(win, "%s%d ", note_name[note % 12], note / 12);
-					} else {
-						wprintw(win, "--- ");
-					}
-					if (event.ins > 0) {
-						wprintw(win, "%02X", event.ins);
-					} else {
-						wprintw(win, "--");
-					}
-					
-					if (adv >= 1) {
-						if (event.vol > 0) {
-							wprintw(win, " v%02X", event.vol);
-						} else {
-							wprintw(win, " ---");
-						}
-					
-						if (adv >= 2) {
-							if (event.fxt > 0) {
-								char t = event.fxt;
-								char t2[0];
-								if (t >= 0x0f) t = 'F' + (t - 0x0f);
-								else { sprintf(t2, "%X", t); t = t2[0]; }
-								wprintw(win, " %c%02X", t, event.fxp);
-							} else {
-								wprintw(win, " ---");
-							}
-							
-							if (adv >= 3) {
-								if (event.f2t > 0) {
-									char t = event.f2t;
-									char t2[0];
-									if (t >= 0x0f) t = 'F' + (t - 0x0f);
-									else { sprintf(t2, "%X", t); t = t2[0]; }
-									wprintw(win, " %c%02X", t, event.f2p);
-								} else {
-									wprintw(win, " ---");
-								}
-							}
-						}
-					}
-					vchanoff = chanoffset; vadv = adv;
-				}
-				if (maxcol < mi.mod->chn && maxcol > 0) wprintw(win, ">");
-				else wprintw(win, "|");
+			if (fi.pos != pos) {
+				pos = fi.pos;
+				row = -1;
 			}
- 			row = fi.row;
- 		}
- 		refresh();
-		wrefresh(win);
+			if (fi.row != row) {
+				renderRows(win, &mi, &fi);
+				row = fi.row;
+				fupdate = false;
+			}
+ 		} else goto keys;
 	}
 	printf("Closing ncurses...\n");
 	clrtoeol();
@@ -270,4 +177,112 @@ int main(int argc, char *argv[]) {
 		printf("snd_pcm_drain failed: %s\n", snd_strerror(err));
 	snd_pcm_close(handle);
 	return 0;
+}
+
+void updateTrack(char* name, char* type) {
+	mvprintw(
+		0, 0, 
+		"%s (%s)",
+		name,
+		type
+	);
+}
+
+void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
+	werase(win);
+	mvprintw(
+ 		LINES-1, 0, 
+ 		"[%c] PAT:%02x:%02x/%02x BPM:%02u SPD:%02u VOL:%03u LOOP:%i CHAN:%02u/%02u VIS:%i",
+ 		is_stopped?'x':'>',
+ 		fi->pos, 
+ 		fi->pattern,
+ 		mi->mod->pat,
+ 		fi->bpm,
+ 		fi->speed,
+ 		vol,
+ 		looper?1:0,
+ 		chanOffset,
+ 		mi->mod->chn-1,
+ 		detail+1
+ 	);
+	int view_chanOffset = chanOffset;
+	int view_detail = detail;
+	int dlvl = (7+(detail*4));
+	for (int y = 0; y < LINES - 2; y++) {
+		int trow = (fi->row - ((LINES - 2) / 2))+y;
+		if (trow > fi->num_rows || trow < 0) { continue;}
+		if (trow == fi->row) {
+			wattron(win, COLOR_PAIR(is_stopped?2:1));
+			wattron(win, A_BOLD);
+		} else {
+			wattroff(win, COLOR_PAIR(is_stopped?2:1));
+			wattroff(win, A_BOLD);
+		}
+		wmove(win, y, 0);
+		wprintw(win, "%02X", trow);
+		int coff = ((COLS - 2) % dlvl);
+		int maxcol = -1;
+		for (int i = chanOffset; i < mi->mod->chn; i++) {
+			if (coff+(((i-chanOffset)+1)*dlvl)+dlvl > COLS) {
+				maxcol = i;
+				break;
+			}
+			wmove(win, y, coff+((i-chanOffset)*dlvl)+2);
+			int track = mi->mod->xxp[fi->pattern]->index[i];
+			struct xmp_event event = mi->mod->xxt[track]->event[trow];
+			if (i > 0 && i == chanOffset) wprintw(win, "<");
+			else wprintw(win, "|");
+			if (event.note > 0x80) {
+				wprintw(win, "=== ");
+			} else if (event.note > 0) {
+				int note = event.note - 1;
+				wprintw(win, "%s%d ", note_name[note % 12], note / 12);
+			} else {
+				wprintw(win, "--- ");
+			}
+			if (event.ins > 0) {
+				wprintw(win, "%02X", event.ins);
+			} else {
+				wprintw(win, "--");
+			}
+					
+			if (detail >= 1) {
+				if (event.vol > 0) {
+					wprintw(win, " v%02X", event.vol);
+				} else {
+					wprintw(win, " ---");
+				}
+			
+				if (detail >= 2) {
+					if (event.fxt > 0) {
+						char t = event.fxt;
+						char t2[0];
+						if (t >= 0x0f) t = 'F' + (t - 0x0f);
+						else { sprintf(t2, "%X", t); t = t2[0]; }
+						wprintw(win, " %c%02X", t, event.fxp);
+					} else {
+						wprintw(win, " ---");
+					}
+					
+					if (detail >= 3) {
+						if (event.f2t > 0) {
+							char t = event.f2t;
+							char t2[0];
+							if (t >= 0x0f) t = 'F' + (t - 0x0f);
+							else { sprintf(t2, "%X", t); t = t2[0]; }
+							wprintw(win, " %c%02X", t, event.f2p);
+						} else {
+							wprintw(win, " ---");
+						}
+					}
+				}
+			}
+			view_chanOffset = chanOffset; 
+			view_detail = detail;
+		}
+		if (maxcol < mi->mod->chn && maxcol > 0) wprintw(win, ">");
+		else wprintw(win, "|");
+	}
+	refresh();
+	wrefresh(win);
 }
