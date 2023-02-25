@@ -10,7 +10,7 @@
 #include <xmp.h>
 #include <ncurses.h>
 
-#define VERSION "0.0.2"
+#define VERSION "0.0.2.1"
 #define SAMPLERATE 48000
 #define BUFFER_SIZE 250000
 
@@ -257,7 +257,7 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 					if (event.fxt > 0) {
 						char t = event.fxt;
 						char t2[0];
-						if (t >= 0x0f) t = 'F' + (t - 0x0f);
+						if (t > 0x0f) t = 'F' + (t - 0x0f);
 						else { sprintf(t2, "%X", t); t = t2[0]; }
 						wprintw(win, " %c%02X", t, event.fxp);
 					} else {
@@ -268,7 +268,7 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 						if (event.f2t > 0) {
 							char t = event.f2t;
 							char t2[0];
-							if (t >= 0x0f) t = 'F' + (t - 0x0f);
+							if (t > 0x0f) t = 'F' + (t - 0x0f);
 							else { sprintf(t2, "%X", t); t = t2[0]; }
 							wprintw(win, " %c%02X", t, event.f2p);
 						} else {
