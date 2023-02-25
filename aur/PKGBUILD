@@ -1,0 +1,39 @@
+# Maintainer: wirlaburla <wirlaburla@worlio.com>
+
+pkgname=trakker-git
+pkgver=0.0.1
+pkgrel=1
+pkgdesc=''
+arch=('x86_64' 'aarch64')
+url='https://codeberg.org/Wirlaburla/trakker'
+license=(GPL3)
+depends=('alsa-lib' 'libxmp' 'ncurses')
+makedepends=('git' 'cmake')
+provides=('trakker')
+conflicts=('trakker')
+source=("$pkgname::git+$url.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+  git describe --long --tags | cut -d- -f1-2 | sed "s/-/\./"
+}
+
+prepare() {
+  cd $pkgname
+}
+
+build() {
+  cd $pkgname
+  mkdir -p build; cd build
+  cmake \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    ..
+}
+
+package() {
+  cd $pkgname/build
+  make install DESTDIR="$pkgdir"
+}
+
+
