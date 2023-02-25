@@ -1,7 +1,7 @@
 # Maintainer: wirlaburla <wirlaburla@worlio.com>
 
 pkgname=trakker-git
-pkgver=0.0.2.1.2
+pkgver=0.2.2
 pkgrel=1
 pkgdesc=''
 arch=('x86_64' 'aarch64')
@@ -35,5 +35,3 @@ package() {
   cd $pkgname/build
   make install DESTDIR="$pkgdir"
 }
-
-

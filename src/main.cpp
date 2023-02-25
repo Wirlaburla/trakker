@@ -10,7 +10,7 @@
 #include <xmp.h>
 #include <ncurses.h>
 
-#define VERSION "0.0.2.1"
+#define VERSION "0.2.2"
 #define SAMPLERATE 48000
 #define BUFFER_SIZE 250000
 
