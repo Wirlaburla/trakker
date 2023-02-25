@@ -190,20 +190,22 @@ void updateTrack(char* name, char* type) {
 
 void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 	werase(win);
+	move(LINES-1, 0);
+	wclrtoeol(stdscr);
 	mvprintw(
  		LINES-1, 0, 
- 		"[%c] PAT:%02x:%02x/%02x BPM:%02u SPD:%02u VOL:%03u LOOP:%i CHAN:%02u/%02u VIS:%i",
+ 		"[%c] PAT:%02x:%02x/%02x BPM:%02u SPD:%02u CHAN:%02u/%02u VOL:%03u d%i %s",
  		is_stopped?'x':'>',
  		fi->pos, 
  		fi->pattern,
  		mi->mod->pat,
  		fi->bpm,
  		fi->speed,
- 		vol,
- 		looper?1:0,
  		chanOffset,
  		mi->mod->chn-1,
- 		detail+1
+ 		vol,
+ 		detail+1,
+ 		looper?"LOOP ":""
  	);
 	int view_chanOffset = chanOffset;
 	int view_detail = detail;

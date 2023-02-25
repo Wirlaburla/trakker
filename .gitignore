@@ -1,5 +1,4 @@
 build/
-
 *.kdevelop
 *.kdevelop.pcs
 *.kdevses
@@ -9,3 +8,9 @@ build/
 *.xm
 *.s3m
 *.it
+
+# PKGBUILD
+aur/pkg
+aur/src
+aur/trakker-git
+aur/*.pkg.tar.zst
