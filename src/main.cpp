@@ -331,5 +331,6 @@ char getEffectType(int i) {
 		case 163: return 'A';
 		case 172: return 'U';
 		case 180: return 'J';
+		default: return 0x00;
 	}
 }
