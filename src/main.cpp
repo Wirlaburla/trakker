@@ -258,8 +258,26 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 				}
 						
 				if (detail >= 2) {
-					if (event.vol != 0) {
-						wprintw(win, " v%02i", event.vol-1);
+					int vol;
+					if ((vol = event.vol) != 0) {
+						// I made this wall...
+						// Then I realized libxmp does not give this wall purpose...
+						/*
+ 						char v = '?';
+ 						if (vol <= 0x50) { v = 'v'; vol--; }
+ 						else if (vol >= 0x60 && vol <= 0x6F) { v = 'd'; vol - 0x50; }
+ 						else if (vol >= 0x70 && vol <= 0x7F) { v = 'c'; vol - 0x60; }
+ 						else if (vol >= 0x80 && vol <= 0x8F) { v = 'b'; vol - 0x70; }
+ 						else if (vol >= 0x90 && vol <= 0x9F) { v = 'a'; vol - 0x80; }
+ 						else if (vol >= 0xA0 && vol <= 0xAF) { v = 'u'; vol - 0x90; }
+ 						else if (vol >= 0xB0 && vol <= 0xBF) { v = 'h'; vol - 0xA0; }
+ 						else if (vol >= 0xC0 && vol <= 0xCF) { v = 'p'; vol - 0xB0; }
+ 						else if (vol >= 0xD0 && vol <= 0xDF) { v = 'l'; vol - 0xC0; }
+ 						else if (vol >= 0xE0 && vol <= 0xEF) { v = 'r'; vol - 0xD0; }
+ 						else if (vol >= 0xF0 && vol <= 0xFF) { v = 'g'; vol - 0xE0; }
+ 						*/
+ 						char v = 'v';
+						wprintw(win, " %c%02i", v, vol);
 					} else {
 						wprintw(win, " ---");
 					}
