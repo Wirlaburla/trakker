@@ -18,9 +18,10 @@ static char *note_name[] = { "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#
 
 void updateTrack(char* name, char* type);
 void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi);
+char getEffectType(int i);
 
 static char *device = "default";
-int chanOffset = 0; int detail = 0; int vol = 100;
+int chanOffset = 0; int detail = 1; int vol = 100;
 bool looper = false, is_stopped = false;
 int main(int argc, char *argv[]) {
 	printf("Trakker %s (with libxmp %s)\n", VERSION, xmp_version);
@@ -137,10 +138,11 @@ int main(int argc, char *argv[]) {
 				case 'l':
 					looper = !looper;
 					break;
-				case '1': detail = 0; break;
-				case '2': detail = 1; break;
-				case '3': detail = 2; break;
-				case '4': detail = 3; break;
+				case '0': detail = 0; break;
+				case '1': detail = 1; break;
+				case '2': detail = 2; break;
+				case '3': detail = 3; break;
+				case '4': detail = 4; break;
 			};
 			renderRows(win, &mi, &fi);
 		}
@@ -201,18 +203,23 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
  		mi->mod->pat,
  		fi->bpm,
  		fi->speed,
- 		chanOffset,
- 		mi->mod->chn-1,
+ 		chanOffset+1,
+ 		mi->mod->chn,
  		vol,
  		detail+1,
  		looper?"LOOP ":""
  	);
 	int view_chanOffset = chanOffset;
 	int view_detail = detail;
-	int dlvl = (7+(detail*4));
+	int dlvl;
+	if (detail == 4) dlvl = 19;
+	else if (detail == 3) dlvl = 15;
+	else if (detail == 2) dlvl = 11;
+	else if (detail == 1) dlvl = 7;
+	else dlvl = 2;
 	for (int y = 0; y < LINES - 2; y++) {
 		int trow = (fi->row - ((LINES - 2) / 2))+y;
-		if (trow > fi->num_rows || trow < 0) { continue;}
+		if (trow > fi->num_rows-1 || trow < 0) { continue;}
 		if (trow == fi->row) {
 			wattron(win, COLOR_PAIR(is_stopped?2:1));
 			wattron(win, A_BOLD);
@@ -234,49 +241,52 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 			struct xmp_event event = mi->mod->xxt[track]->event[trow];
 			if (i > 0 && i == chanOffset) wprintw(win, "<");
 			else wprintw(win, "|");
-			if (event.note > 0x80) {
-				wprintw(win, "=== ");
-			} else if (event.note > 0) {
-				int note = event.note - 1;
-				wprintw(win, "%s%d ", note_name[note % 12], note / 12);
-			} else {
-				wprintw(win, "--- ");
-			}
-			if (event.ins > 0) {
-				wprintw(win, "%02X", event.ins);
-			} else {
-				wprintw(win, "--");
-			}
-					
 			if (detail >= 1) {
-				if (event.vol > 0) {
-					wprintw(win, " v%02X", event.vol);
+				if (event.note > 0x80) {
+					wprintw(win, "=== ");
+				} else if (event.note > 0) {
+					int note = event.note - 1;
+					wprintw(win, "%s%d ", note_name[note % 12], note / 12);
 				} else {
-					wprintw(win, " ---");
+					wprintw(win, "--- ");
 				}
-			
+
+				if (event.ins > 0) {
+					wprintw(win, "%02X", event.ins);
+				} else {
+					wprintw(win, "--");
+				}
+						
 				if (detail >= 2) {
-					if (event.fxt > 0) {
-						char t = event.fxt;
-						char t2[0];
-						if (t > 0x0f) t = 'F' + (t - 0x0f);
-						else { sprintf(t2, "%X", t); t = t2[0]; }
-						wprintw(win, " %c%02X", t, event.fxp);
+					if (event.vol != 0) {
+						wprintw(win, " v%02i", event.vol-1);
 					} else {
 						wprintw(win, " ---");
 					}
-					
+				
 					if (detail >= 3) {
-						if (event.f2t > 0) {
-							char t = event.f2t;
-							char t2[0];
-							if (t > 0x0f) t = 'F' + (t - 0x0f);
-							else { sprintf(t2, "%X", t); t = t2[0]; }
-							wprintw(win, " %c%02X", t, event.f2p);
-						} else {
+						char f1;
+						if ((f1 = getEffectType(event.fxt)) != 0)
+							wprintw(win, " %c%02X", f1, event.fxp);
+						else
 							wprintw(win, " ---");
+						
+						if (detail >= 4) {
+							char f2;
+							if ((f2 = getEffectType(event.fxt)) != 0)
+								wprintw(win, " %c%02X", f2, event.f2p);
+							else
+								wprintw(win, " ---");
 						}
 					}
+				}
+			} else {
+				if (event.note > 0x80) {
+					wprintw(win, "-");
+				} else if (event.note > 0) {
+					wprintw(win, "#");
+				} else {
+					wprintw(win, " ");
 				}
 			}
 			view_chanOffset = chanOffset; 
@@ -287,4 +297,39 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 	}
 	refresh();
 	wrefresh(win);
+}
+
+char getEffectType(int i) {
+	// The effect type characters are so strange to me.
+	// They make absolutely no sense in why it's setup this way.
+	// Maybe I'm mega stupid right now but this is all of the IT
+	// formats effects, so maybe this will cover everything enough.
+	// Broken, but not crashy-broken anymore.
+	switch(i) {
+		case 1: return 'F';
+		case 2: return 'E';
+		case 3: return 'G';
+		case 4: return 'H';
+		case 5: return 'L';
+		case 6: return 'K';
+		case 7: return 'R';
+		case 8: return 'X';
+		case 9: return 'O';
+		case 10: return 'D';
+		case 11: return 'B';
+		case 16: return 'V';
+		case 17: return 'W';
+		case 27: return 'Q';
+		case 29: return 'I';
+		case 128: return 'M';
+		case 129: return 'N';
+		case 132: return 'Z';
+		case 135: return 'T';
+		case 137: return 'P';
+		case 138: return 'Y';
+		case 142: return 'C';
+		case 163: return 'A';
+		case 172: return 'U';
+		case 180: return 'J';
+	}
 }
