@@ -92,11 +92,12 @@ int main(int argc, char *argv[]) {
 	xmp_start_player(c, SAMPLERATE, 0);
 	
 	updateTrack(mi.mod->name, mi.mod->type);
-	while (true) {
+	while (true) {	
 		xmp_get_frame_info(c, &fi);
 		if (xmp_play_frame(c) != 0 && !is_stopped) break;
 		if (!looper && fi.loop_count > 0) break;
 		
+		// Print Top-Right time
 		mvprintw(
 			0, COLS-11, 
 			"%02u:%02u/%02u:%02u", 
@@ -106,6 +107,14 @@ int main(int argc, char *argv[]) {
 			(fi.total_time / 1000) % 60
 		);
 		
+		
+		/* - Handles Key Events
+		 * Key timeout is set to 0 to become non-blocking if playing. This allows
+		 * Continualy looping to play the track without requiring a key press.
+		 * Once the playstate changes through the boolean 'is_stopped', the timeout
+		 * changes to -1 for an infinite timeout in the 'keys' loop which will loop
+		 * until is_stopped is false. The block state is for efficiency.
+		 */
 		keys:
 		wtimeout(win, is_stopped?-1:0);
 		if ((key = wgetch(win)) != 0) {
@@ -138,11 +147,13 @@ int main(int argc, char *argv[]) {
 				case 'l':
 					looper = !looper;
 					break;
-				case '0': detail = 0; break;
-				case '1': detail = 1; break;
-				case '2': detail = 2; break;
-				case '3': detail = 3; break;
-				case '4': detail = 4; break;
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5': 
+					detail = std::atoi(key);
+					break;
 			};
 			renderRows(win, &mi, &fi);
 		}
@@ -212,11 +223,12 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 	int view_chanOffset = chanOffset;
 	int view_detail = detail;
 	int dlvl;
-	if (detail == 4) dlvl = 19;
-	else if (detail == 3) dlvl = 15;
-	else if (detail == 2) dlvl = 11;
-	else if (detail == 1) dlvl = 7;
-	else dlvl = 2;
+	// Set proper sizes for channels.
+	if (detail == 5) dlvl = 19;
+	else if (detail == 4) dlvl = 15;
+	else if (detail == 3) dlvl = 11;
+	else if (detail == 2) dlvl = 7;
+	else dlvl = 3;
 	for (int y = 0; y < LINES - 2; y++) {
 		int trow = (fi->row - ((LINES - 2) / 2))+y;
 		if (trow > fi->num_rows-1 || trow < 0) { continue;}
@@ -241,7 +253,7 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 			struct xmp_event event = mi->mod->xxt[track]->event[trow];
 			if (i > 0 && i == chanOffset) wprintw(win, "<");
 			else wprintw(win, "|");
-			if (detail >= 1) {
+			if (detail >= 2) {
 				if (event.note > 0x80) {
 					wprintw(win, "=== ");
 				} else if (event.note > 0) {
@@ -257,7 +269,7 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 					wprintw(win, "--");
 				}
 						
-				if (detail >= 2) {
+				if (detail >= 3) {
 					int vol;
 					if ((vol = event.vol) != 0) {
 						// I made this wall...
@@ -282,14 +294,14 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 						wprintw(win, " ---");
 					}
 				
-					if (detail >= 3) {
+					if (detail >= 4) {
 						char f1;
 						if ((f1 = getEffectType(event.fxt)) != 0)
 							wprintw(win, " %c%02X", f1, event.fxp);
 						else
 							wprintw(win, " ---");
 						
-						if (detail >= 4) {
+						if (detail >= 5) {
 							char f2;
 							if ((f2 = getEffectType(event.fxt)) != 0)
 								wprintw(win, " %c%02X", f2, event.f2p);

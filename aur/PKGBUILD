@@ -1,7 +1,7 @@
 # Maintainer: wirlaburla <wirlaburla@worlio.com>
 
 pkgname=trakker-git
-pkgver=0.2.2
+pkgver=0.2.2.0
 pkgrel=1
 pkgdesc=''
 arch=('x86_64' 'aarch64')
