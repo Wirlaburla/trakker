@@ -380,7 +380,7 @@ void renderInstruments(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 			struct xmp_channel_info cinfo = fi->channel_info[c];
 			int note = (cinfo.note * (COLS - 7)) / 144;
 			if (cinfo.instrument != y) continue;
-			wmove(win, y-insOffset, note);
+			wmove(win, y-insOffset, note+3);
 			if (cinfo.volume >= 16) wprintw(win, "#");
 			else if (cinfo.volume > 0) wprintw(win, "-");
 		}
