@@ -289,13 +289,13 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 					int note = event.note - 1;
 					wprintw(win, "%s%d ", note_name[note % 12], note / 12);
 				} else {
-					wprintw(win, "--- ");
+					wprintw(win, "... ");
 				}
 
 				if (event.ins > 0) {
 					wprintw(win, "%02X", event.ins);
 				} else {
-					wprintw(win, "--");
+					wprintw(win, "..");
 				}
 						
 				if (detail >= 3) {
@@ -320,7 +320,7 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
  						char v = 'v';
 						wprintw(win, " %c%02i", v, vol);
 					} else {
-						wprintw(win, " ---");
+						wprintw(win, " ...");
 					}
 				
 					if (detail >= 4) {
@@ -328,14 +328,14 @@ void renderRows(WINDOW* win, xmp_module_info *mi, xmp_frame_info *fi) {
 						if ((f1 = getEffectType(event.fxt)) != 0)
 							wprintw(win, " %c%02X", f1, event.fxp);
 						else
-							wprintw(win, " ---");
+							wprintw(win, " ...");
 						
 						if (detail >= 5) {
 							char f2;
 							if ((f2 = getEffectType(event.fxt)) != 0)
 								wprintw(win, " %c%02X", f2, event.f2p);
 							else
-								wprintw(win, " ---");
+								wprintw(win, " ...");
 						}
 					}
 				}
