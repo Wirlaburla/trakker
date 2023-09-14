@@ -337,12 +337,12 @@ void renderInfo(xmp_module_info *mi, xmp_frame_info *fi) {
 
 void renderAbout() {
 	wattron(dis, A_BOLD);
-	mvwprintw(dis, 1-vOffset, 2, "========					\\\\		// \\\\	//");
-	mvwprintw(dis, 2-vOffset, 2, "	||							||  //	|| //");
-	mvwprintw(dis, 3-vOffset, 2, "	||								\\\\//		\\\\//");
-	mvwprintw(dis, 4-vOffset, 2, "	|| //==\\\\ //===|| ||\\\\		||\\\\	//===\\\\ //===\\\\");
-	mvwprintw(dis, 5-vOffset, 2, "	|| ||		||		|  || \\\\	|| \\\\  ||===// ||");
-	mvwprintw(dis, 6-vOffset, 2, "	|| ||		 \\\\===|| ||  \\\\  ||  \\\\ \\\\___/  ||");
+    mvwprintw(dis, 1-vOffset, 2, "######## ||##\\\\   //\\\\  || // || // ||### ||##\\\\");
+    mvwprintw(dis, 2-vOffset, 2, "   ||    ||   || //  \\\\ ||//  ||//  ||    ||  ||");
+    mvwprintw(dis, 3-vOffset, 2, "   ||    ||##//  ||##|| |#|   |#|   ||#   ||##//");
+    mvwprintw(dis, 4-vOffset, 2, "   ||    ||\\\\    ||  || ||\\\\  ||\\\\  ||    ||\\\\  ");
+    mvwprintw(dis, 5-vOffset, 2, "   ||    || \\\\   ||  || || \\\\ || \\\\ ||### || \\\\ ");
+    mvwprintw(dis, 6-vOffset, 2, "=================================================");
 	mvwprintw(dis, 8-vOffset, 1, "TRAKKER		v%s", TRAKKER_VERSION);
 	mvwprintw(dis, 9-vOffset, 1, "libXMP		 v%s", xmp_version);
 	
