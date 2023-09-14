@@ -10,6 +10,7 @@ void renderRows(xmp_module_info *mi, xmp_frame_info *fi);
 void renderChannels(xmp_module_info *mi, xmp_frame_info *fi);
 void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi);
 void generateEffectsTable(char* type);
+void addToEffects(int id, char efx, bool mem);
 bool isPartOf(char* w1, char* w2);
 
 #endif
