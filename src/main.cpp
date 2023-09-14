@@ -240,8 +240,8 @@ int main(int argc, char *argv[]) {
 			}
 			if (xfi.row != row) {
 				row = xfi.row;
+				renderTrack(&xmi, &xfi);
 			}
-			renderTrack(&xmi, &xfi);
 			wrefresh(tab);
 			wrefresh(dis);
  		} else goto keys;
