@@ -1,6 +1,12 @@
 #ifndef TRAKKER_H
 #define TRAKKER_H
 
+xmp_context xc;
+snd_pcm_t *handle;
+snd_pcm_sframes_t frames;
+WINDOW *dis;
+WINDOW *tab;
+
 void destroyWindows();
 void createWindows();
 void renderInfo(xmp_module_info *mi, xmp_frame_info *fi);

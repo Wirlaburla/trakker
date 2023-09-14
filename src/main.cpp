@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
+#include <stdlib.h>
 #include <map>
 
 #include <alsa/asoundlib.h>
@@ -17,6 +18,10 @@ static char *note_name[] = { "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#
 static char* pages[] = { "[1] Info", "[2] Pattern", "[3] Channel Bars", "[4] Piano Roll", "[5] About" };
 static char* device = "default";
 
+char* file;
+bool colorMode = 0; // 0 - Auto, 1 - Monochrome, 2 - 8-bit, 3 - Full
+int mtype = XMP_MODE_AUTO;
+int smix = 70;
 int display = 0;
 int mode = 0;
 int vol;
@@ -30,13 +35,87 @@ bool loop;
 std::map<int, char> efxtable;
 std::map<int, bool> efxmemtable;
 
-WINDOW *dis;
-WINDOW *tab;
-
 int main(int argc, char *argv[]) {
+	printf("TRAKKER %s (using XMP %s)\n", TRAKKER_VERSION, xmp_version);
+	for (int a = 1; a < argc; ++a) {
+		if (strcmp(argv[a], "-h") == 0) {
+			printf("\n");
+			printf("Help\n");
+			printf("-h                Show this message.\n");
+			printf("-d <num>          Start on the specified panel.\n");
+			printf("-c <num>          Force terminal color mode.\n");
+			printf("  0                 Auto (default)\n");
+			printf("  1                 Monochrome\n");
+			printf("  2                 8bit\n");
+			printf("  3                 Full\n");
+			printf("-s <num>          Stereo Seperation\n");
+			printf("-t <type>         Set module emulation type.\n");
+			printf("  auto              Autodetect mode (default)\n");
+			printf("  mod               Play as a generic MOD player\n");
+			printf("  noisetracker      Play using Noisetracker quirks\n");
+			printf("  protracker        Play using Protracker 1/2 quirks\n");
+			printf("  s3m               Play as a generic S3M player\n");
+			printf("  st3               Play using ST3 bug emulation\n");
+			printf("  st3gus            Play using ST3+GUS quirks\n");
+			printf("  xm                Play as a generic XM player\n");
+			printf("  ft2               Play using FT2 bug emulation\n");
+			printf("  it                Play using IT quirks\n");
+			printf("  itsmp             Play using IT sample mode quirks\n");
+			exit(0);
+		} else if (strcmp(argv[a], "-d") == 0) {
+			int newdisplay = atoi(argv[a+1])-1;
+			if (newdisplay > 4 || newdisplay < 0)
+				fprintf(stderr, "Display argument is invalid.\n");
+			else {
+				printf("Setting display to \"%s\"\n", pages[newdisplay]);
+				display = newdisplay;
+			}
+			a++;
+		} else if (strcmp(argv[a], "-c") == 0) {
+			colorMode = atoi(argv[a+1]);
+			a++;
+		} else if (strcmp(argv[a], "-s") == 0) {
+			int newmix = atoi(argv[a+1]);
+			if (newmix > 100 || newmix < 0)
+				fprintf(stderr, "Stero seperation argument is invalid.\n");
+			else {
+				printf("Setting Stero seperation to %i%%\n", newmix);
+				smix = newmix;
+			}
+			a++;
+		} else if (strcmp(argv[a], "-t") == 0) {
+			char* newmode = argv[a+1];
+			if (strcmp(newmode, "mod") == 0) {
+				mtype = XMP_MODE_MOD;
+			} else if (strcmp(newmode, "noisetracker") == 0) {
+				mtype = XMP_MODE_NOISETRACKER;
+			} else if (strcmp(newmode, "protracker") == 0) {
+				mtype = XMP_MODE_PROTRACKER;
+			} else if (strcmp(newmode, "s3m") == 0) {
+				mtype = XMP_MODE_S3M;
+			} else if (strcmp(newmode, "st3") == 0) {
+				mtype = XMP_MODE_ST3;
+			} else if (strcmp(newmode, "st3gus") == 0) {
+				mtype = XMP_MODE_ST3GUS;
+			} else if (strcmp(newmode, "xm") == 0) {
+				mtype = XMP_MODE_XM;
+			} else if (strcmp(newmode, "ft2") == 0) {
+				mtype = XMP_MODE_FT2;
+			} else if (strcmp(newmode, "it") == 0) {
+				mtype = XMP_MODE_IT;
+			} else if (strcmp(newmode, "itsmp") == 0) {
+				mtype = XMP_MODE_ITSMP;
+			}
+			a++;
+		} else if (!file) {
+			file = argv[a];
+		} else {
+			fprintf(stderr, "Unknown argument: %s\n", argv[a]);
+			exit(EXIT_FAILURE);
+		}
+	}
+	
 	int err;
-	snd_pcm_t *handle;
-	snd_pcm_sframes_t frames;
 	if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
 		fprintf(stderr, "Playback open error: %s\n", snd_strerror(err));
 		exit(EXIT_FAILURE);
@@ -47,21 +126,25 @@ int main(int argc, char *argv[]) {
 	}
 	printf("%s initialized.\n", "ALSA");
 	
-	xmp_context xc;
 	xc = xmp_create_context();
-	if (xmp_load_module(xc, argv[1]) != 0) {
-		fprintf(stderr, "Failed to load Module: %s\n", argv[1]);
+	if (xmp_load_module(xc, file) != 0) {
+		fprintf(stderr, "Failed to load Module: %s\n", file);
 		exit(EXIT_FAILURE);
-	} else printf("Loaded Module: \"%s\"\n", argv[1]);
+	} else printf("Loaded Module: \"%s\"\n", file);
 	
 	struct xmp_module_info xmi;
 	struct xmp_frame_info xfi;
 	
 	initscr();
 	
+	start_color();
+	if (colorMode == 1) goto colorless;
+	else if (colorMode == 2) goto color_8;
+	else if (colorMode == 3) goto color_full;
+	
 	if (has_colors() == TRUE) {
-		start_color();
 		if (can_change_color() == TRUE) {	
+			color_full:
 			// Primary Background
 			init_pair(1, COLOR_BLACK, 8);
 			// Inactive Section
@@ -81,6 +164,7 @@ int main(int argc, char *argv[]) {
 			// Display Stopped Playhead Row#
 			init_pair(9, COLOR_YELLOW, COLOR_RED);
 		} else {
+			color_8:
 			// Primary Background
 			init_pair(1, COLOR_BLACK, 8);
 			// Inactive Section
@@ -101,6 +185,7 @@ int main(int argc, char *argv[]) {
 			init_pair(9, COLOR_YELLOW, COLOR_RED);
 		}
 	} else {
+		colorless:
 		// Primary Background
 		init_pair(1, COLOR_BLACK, COLOR_BLACK);
 		// Inactive Section
@@ -135,11 +220,13 @@ int main(int argc, char *argv[]) {
 	xmp_get_module_info(xc, &xmi);
 	row = pos = -1;
 	generateEffectsTable(xmi.mod->type);
+	xmp_set_player(xc, XMP_PLAYER_MODE, mtype);
 	xmp_start_player(xc, SAMPLERATE, 0);
+	xmp_set_player(xc, XMP_PLAYER_MIX, smix);
 	
 	int key;
 	bool displayChanged;
-	display = 0; displayChanged = true;
+	displayChanged = true;
 	while (true) {
 		xmp_get_frame_info(xc, &xfi);
 		if (xmp_play_frame(xc) != 0 && !stopped) break;
@@ -191,6 +278,14 @@ int main(int argc, char *argv[]) {
 					break;
 				case ',':
 					if (vol > 0) xmp_set_player(xc, XMP_PLAYER_VOLUME, vol-=5);
+					break;
+				case '[':
+					if (smix > 0) smix-=5;
+					xmp_set_player(xc, XMP_PLAYER_MIX, smix);
+					break;
+				case ']':
+					if (smix < 100) smix+=5;
+					xmp_set_player(xc, XMP_PLAYER_MIX, smix);
 					break;
 				case 'l':
 					loop = !loop;
@@ -314,24 +409,26 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 
 void renderInfo(xmp_module_info *mi, xmp_frame_info *fi) {
 	wattron(dis, A_BOLD);
-	mvwprintw(dis, 1-vOffset, 1, "Format:");
-	mvwprintw(dis, 2-vOffset, 1, "Channels:");
-	mvwprintw(dis, 3-vOffset, 1, "Looping:");
-	mvwprintw(dis, 5-vOffset, 1, "Instruments:");
-	mvwprintw(dis, (7+mi->mod->ins)-vOffset, 1, "Samples:");
+	mvwprintw(dis, 1-vOffset, 1, "Mode:");
+	mvwprintw(dis, 2-vOffset, 1, "Format:");
+	mvwprintw(dis, 3-vOffset, 1, "Stereo Mix:");
+	mvwprintw(dis, 4-vOffset, 1, "Channels:");
+	mvwprintw(dis, 6-vOffset, 1, "Instruments:");
+	mvwprintw(dis, (8+mi->mod->ins)-vOffset, 1, "Samples:");
 	wattroff(dis, A_BOLD);
 	
-	mvwprintw(dis, 1-vOffset, 16, mi->mod->type);
-	mvwprintw(dis, 2-vOffset, 16, "%i", mi->mod->chn);
-	mvwprintw(dis, 3-vOffset, 16, loop?"YES":"NO");
-	mvwprintw(dis, 5-vOffset, 16, "%i", mi->mod->ins);
-	mvwprintw(dis, (7+mi->mod->ins)-vOffset, 16, "%i", mi->mod->smp);
+	mvwprintw(dis, 1-vOffset, 16, "%i", xmp_get_player(xc, XMP_PLAYER_MODE));
+	mvwprintw(dis, 2-vOffset, 16, mi->mod->type);
+	mvwprintw(dis, 3-vOffset, 16, "%i%%", smix);
+	mvwprintw(dis, 4-vOffset, 16, "%i", mi->mod->chn);
+	mvwprintw(dis, 6-vOffset, 16, "%i", mi->mod->ins);
+	mvwprintw(dis, (8+mi->mod->ins)-vOffset, 16, "%i", mi->mod->smp);
 	
 	for (int xi = 0; xi < mi->mod->ins; xi++) {
-		mvwprintw(dis, xi+6-vOffset, 1, "[%02X] %s", xi, mi->mod->xxi[xi].name);
+		mvwprintw(dis, xi+7-vOffset, 1, "[%02X] %s", xi, mi->mod->xxi[xi].name);
 	}
 	for (int xs = 0; xs < mi->mod->smp; xs++) {
-		mvwprintw(dis, xs+(8+mi->mod->ins)-vOffset, 1, "[%02X] %s", xs, mi->mod->xxs[xs].name);
+		mvwprintw(dis, xs+(9+mi->mod->ins)-vOffset, 1, "[%02X] %s", xs, mi->mod->xxs[xs].name);
 	}
 }
 
@@ -343,8 +440,8 @@ void renderAbout() {
     mvwprintw(dis, 4-vOffset, 2, "   ||    ||\\\\    ||  || ||\\\\  ||\\\\  ||    ||\\\\  ");
     mvwprintw(dis, 5-vOffset, 2, "   ||    || \\\\   ||  || || \\\\ || \\\\ ||### || \\\\ ");
     mvwprintw(dis, 6-vOffset, 2, "=================================================");
-	mvwprintw(dis, 8-vOffset, 1, "TRAKKER		v%s", TRAKKER_VERSION);
-	mvwprintw(dis, 9-vOffset, 1, "libXMP		 v%s", xmp_version);
+	mvwprintw(dis, 8-vOffset, 1, "TRAKKER");
+	mvwprintw(dis, 9-vOffset, 1, "libXMP");
 	
 	mvwprintw(dis, 11-vOffset, 1, "[Spacebar]");
 	mvwprintw(dis, 12-vOffset, 1, "Number Keys");
@@ -354,6 +451,8 @@ void renderAbout() {
 	mvwprintw(dis, 16-vOffset, 1, "[L]");
 	wattroff(dis, A_BOLD);
 	
+	mvwprintw(dis, 8-vOffset, 16, "%s", TRAKKER_VERSION);
+	mvwprintw(dis, 9-vOffset, 16, "%s", xmp_version);
 	mvwprintw(dis, 11-vOffset, 16, "Play/Pause");
 	mvwprintw(dis, 12-vOffset, 16, "Change Tab");
 	mvwprintw(dis, 13-vOffset, 16, "Change Hori or Vert Display Offset");
