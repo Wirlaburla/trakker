@@ -378,9 +378,9 @@ void createWindows() {
 void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 	werase(dis);
 	wclrtoeol(tab);
-	mvwprintw(tab, 0, 1, mi->mod->name);
-		mvwprintw(
-			tab, 
+	mvwaddstr(tab, 0, 1, mi->mod->name);
+	mvwprintw(
+		tab, 
 		0, COLS-12, 
 		"%02u:%02u/%02u:%02u", 
 		((fi->time / 1000) / 60) % 60, 
@@ -409,12 +409,12 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 
 void renderInfo(xmp_module_info *mi, xmp_frame_info *fi) {
 	wattron(dis, A_BOLD);
-	mvwprintw(dis, 1-vOffset, 1, "Mode:");
-	mvwprintw(dis, 2-vOffset, 1, "Format:");
-	mvwprintw(dis, 3-vOffset, 1, "Stereo Mix:");
-	mvwprintw(dis, 4-vOffset, 1, "Channels:");
-	mvwprintw(dis, 6-vOffset, 1, "Instruments:");
-	mvwprintw(dis, (8+mi->mod->ins)-vOffset, 1, "Samples:");
+	mvwaddstr(dis, 1-vOffset, 1, "Mode:");
+	mvwaddstr(dis, 2-vOffset, 1, "Format:");
+	mvwaddstr(dis, 3-vOffset, 1, "Stereo Mix:");
+	mvwaddstr(dis, 4-vOffset, 1, "Channels:");
+	mvwaddstr(dis, 6-vOffset, 1, "Instruments:");
+	mvwaddstr(dis, (8+mi->mod->ins)-vOffset, 1, "Samples:");
 	wattroff(dis, A_BOLD);
 	
 	mvwprintw(dis, 1-vOffset, 16, "%i", xmp_get_player(xc, XMP_PLAYER_MODE));
@@ -434,37 +434,37 @@ void renderInfo(xmp_module_info *mi, xmp_frame_info *fi) {
 
 void renderAbout() {
 	wattron(dis, A_BOLD);
-    mvwprintw(dis, 1-vOffset, 2, "######## ||##\\\\   //\\\\  || // || // ||### ||##\\\\");
-    mvwprintw(dis, 2-vOffset, 2, "   ||    ||   || //  \\\\ ||//  ||//  ||    ||  ||");
-    mvwprintw(dis, 3-vOffset, 2, "   ||    ||##//  ||##|| |#|   |#|   ||#   ||##//");
-    mvwprintw(dis, 4-vOffset, 2, "   ||    ||\\\\    ||  || ||\\\\  ||\\\\  ||    ||\\\\  ");
-    mvwprintw(dis, 5-vOffset, 2, "   ||    || \\\\   ||  || || \\\\ || \\\\ ||### || \\\\ ");
-    mvwprintw(dis, 6-vOffset, 2, "=================================================");
-	mvwprintw(dis, 8-vOffset, 1, "TRAKKER");
-	mvwprintw(dis, 9-vOffset, 1, "libXMP");
+    mvwaddstr(dis, 1-vOffset, 2, "######## ||##\\\\   //\\\\  || // || // ||### ||##\\\\");
+    mvwaddstr(dis, 2-vOffset, 2, "   ||    ||   || //  \\\\ ||//  ||//  ||    ||  ||");
+    mvwaddstr(dis, 3-vOffset, 2, "   ||    ||##//  ||##|| |#|   |#|   ||#   ||##//");
+    mvwaddstr(dis, 4-vOffset, 2, "   ||    ||\\\\    ||  || ||\\\\  ||\\\\  ||    ||\\\\  ");
+    mvwaddstr(dis, 5-vOffset, 2, "   ||    || \\\\   ||  || || \\\\ || \\\\ ||### || \\\\ ");
+    mvwaddstr(dis, 6-vOffset, 2, "=================================================");
+	mvwaddstr(dis, 8-vOffset, 1, "TRAKKER");
+	mvwaddstr(dis, 9-vOffset, 1, "libXMP");
 	
-	mvwprintw(dis, 11-vOffset, 1, "[Spacebar]");
-	mvwprintw(dis, 12-vOffset, 1, "Number Keys");
-	mvwprintw(dis, 13-vOffset, 1, "[LF] and [RT]");
-	mvwprintw(dis, 14-vOffset, 1, "[UP] and [DN]");
-	mvwprintw(dis, 15-vOffset, 1, "[,] and [.]");
-	mvwprintw(dis, 16-vOffset, 1, "[Return]");
-	mvwprintw(dis, 17-vOffset, 1, "[L]");
-	mvwprintw(dis, 18-vOffset, 1, "[PGUP] and [PGDN]");
-	mvwprintw(dis, 19-vOffset, 1, "[[] and []]");
+	mvwaddstr(dis, 11-vOffset, 1, "[Spacebar]");
+	mvwaddstr(dis, 12-vOffset, 1, "Number Keys");
+	mvwaddstr(dis, 13-vOffset, 1, "[LF] and [RT]");
+	mvwaddstr(dis, 14-vOffset, 1, "[UP] and [DN]");
+	mvwaddstr(dis, 15-vOffset, 1, "[,] and [.]");
+	mvwaddstr(dis, 16-vOffset, 1, "[Return]");
+	mvwaddstr(dis, 17-vOffset, 1, "[L]");
+	mvwaddstr(dis, 18-vOffset, 1, "[PGUP] and [PGDN]");
+	mvwaddstr(dis, 19-vOffset, 1, "[[] and []]");
 	wattroff(dis, A_BOLD);
 	
-	mvwprintw(dis, 8-vOffset, 20, "%s", TRAKKER_VERSION);
-	mvwprintw(dis, 9-vOffset, 20, "%s", xmp_version);
-	mvwprintw(dis, 11-vOffset, 20, "Play/Pause");
-	mvwprintw(dis, 12-vOffset, 20, "Change Tab");
-	mvwprintw(dis, 13-vOffset, 20, "Change horizontal offset.");
-	mvwprintw(dis, 14-vOffset, 20, "Change vertical offset.");
-	mvwprintw(dis, 15-vOffset, 20, "Control volume");
-	mvwprintw(dis, 16-vOffset, 20, "Reset Display");
-	mvwprintw(dis, 17-vOffset, 20, "Toggle Loop");
-	mvwprintw(dis, 18-vOffset, 20, "Scroll vertically per page.");
-	mvwprintw(dis, 19-vOffset, 20, "Change stereo mixing.");
+	mvwaddstr(dis, 8-vOffset, 20, TRAKKER_VERSION);
+	mvwaddstr(dis, 9-vOffset, 20, xmp_version);
+	mvwaddstr(dis, 11-vOffset, 20, "Play/Pause");
+	mvwaddstr(dis, 12-vOffset, 20, "Change Tab");
+	mvwaddstr(dis, 13-vOffset, 20, "Change horizontal offset.");
+	mvwaddstr(dis, 14-vOffset, 20, "Change vertical offset.");
+	mvwaddstr(dis, 15-vOffset, 20, "Control volume");
+	mvwaddstr(dis, 16-vOffset, 20, "Reset Display");
+	mvwaddstr(dis, 17-vOffset, 20, "Toggle Loop");
+	mvwaddstr(dis, 18-vOffset, 20, "Scroll vertically per page.");
+	mvwaddstr(dis, 19-vOffset, 20, "Change stereo mixing.");
 }
 
 void renderRows(xmp_module_info *mi, xmp_frame_info *fi) {
@@ -549,8 +549,8 @@ void renderChannels(xmp_module_info *mi, xmp_frame_info *fi) {
 		wprintw(dis, "%02X", y);
 		wattroff(dis, no_pair);
 		for (int c = 0; c < COLS - 5; c++) {
-			if (c < cvol) wprintw(dis, "#");
-			else wprintw(dis, " ");
+			if (c < cvol) waddstr(dis, "#");
+			else waddstr(dis, " ");
 		}
 	}
 }
@@ -569,9 +569,9 @@ void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi) {
 			int note = (cinfo.note * (COLS - 4)) / 144;
 			if (cinfo.instrument != y) continue;
 			wmove(dis, y-vOffset, note+3);
-			if (cinfo.volume >= 32) wprintw(dis, "#");
-			else if (cinfo.volume >= 16) wprintw(dis, "=");
-			else if (cinfo.volume > 0) wprintw(dis, "-");
+			if (cinfo.volume >= 32) waddstr(dis, "#");
+			else if (cinfo.volume >= 16) waddstr(dis, "=");
+			else if (cinfo.volume > 0) waddstr(dis, "-");
 		}
 		wmove(dis, y, COLS-4);
 	}
