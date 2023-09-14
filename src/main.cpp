@@ -295,7 +295,7 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 	);
 	mvwprintw(tab, 1, COLS-10, "VOL: %i%%", vol);
 	mvwprintw(tab, 1, 1, "%i/%ibpm", fi->speed, fi->bpm);
-	mvwprintw(tab, LINES-2, (COLS/2)-4, "%s%s", stopped?"STOPPED":"PLAYING", loop?" [L]":"");
+	mvwprintw(tab, LINES-2, 1, "%s %s", stopped?"STOPPED":"PLAYING", loop?"[L]":"[ ]");
 	if (display == 0) {
 		renderInfo(mi, fi);
 	} else if (display == 1) {
@@ -368,7 +368,7 @@ void renderRows(xmp_module_info *mi, xmp_frame_info *fi) {
 		if (mi->mod->xxo[j] == 0xFF) continue;
 		chtype patpair = (j == fi->pos)?COLOR_PAIR(6):COLOR_PAIR(4);
 		wattron(dis, patpair);
-		mvwprintw(dis, LINES-5, (COLS/2)+(j*3)-(fi->pos*3), "%02X", mi->mod->xxo[j]);
+		mvwprintw(dis, LINES-5, (COLS/2)+(j*3)-(fi->pos*3)-3, "%02X", mi->mod->xxo[j]);
 		wattroff(dis, patpair);
 	}
 	wattroff(tab, COLOR_PAIR(5));
