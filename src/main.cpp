@@ -12,7 +12,7 @@
 #define BUFFER_SIZE 250000
 
 static char *note_name[] = { "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B " };
-static char* pages[] = { "[1] Info", "[2] Pattern", "[3] Channel Bars", "[4] Visualizer", "[5] About" };
+static char* pages[] = { "[1] Info", "[2] Pattern", "[3] Channel Bars", "[4] Piano Roll", "[5] About" };
 static char* device = "default";
 
 int display = 0;
