@@ -9,7 +9,7 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi);
 void renderRows(xmp_module_info *mi, xmp_frame_info *fi);
 void renderChannels(xmp_module_info *mi, xmp_frame_info *fi);
 void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi);
-void generateEffectsTable(xmp_module *xm);
+void generateEffectsTable(char* type);
 bool isPartOf(char* w1, char* w2);
 
 #endif

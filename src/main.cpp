@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 	int row, pos;
 	xmp_get_module_info(xc, &xmi);
 	row = pos = -1;
-	generateEffectsTable(xmi.mod);
+	generateEffectsTable(xmi.mod->type);
 	xmp_start_player(xc, SAMPLERATE, 0);
 	
 	int key;
@@ -171,9 +171,11 @@ int main(int argc, char *argv[]) {
 					break;
 				case KEY_PPAGE:
 					if (vOffset > vMin + LINES-6) vOffset-=(LINES-5);
+					else vOffset = vMin;
 					break;
 				case KEY_NPAGE:
-					if (vOffset < vMax - LINES-5) vOffset+=(LINES-5);
+					if (vOffset < vMax - LINES-6) vOffset+=(LINES-5);
+					else vOffset = vMax;
 					break;
 				case 10:
 					hOffset = 0;
@@ -469,15 +471,15 @@ void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi) {
 	}
 }
 
-void generateEffectsTable(xmp_module *xm) {
-	if (isPartOf(xm->type, "669")) {
+void generateEffectsTable(char* type) {
+	if (isPartOf(type, "669")) {
 		effects[96] = 'A';
         effects[97] = 'B';
         effects[98] = 'C';
         effects[99] = 'D';
         effects[100] = 'E';
         effects[126] = 'F';
-	} else if (isPartOf(xm->type, "Farandole")) {
+	} else if (isPartOf(type, "Farandole")) {
 		effects[249] = '1';
         effects[248] = '2';
         effects[122] = '3';
@@ -489,7 +491,7 @@ void generateEffectsTable(xmp_module *xm) {
         effects[123] = '9';
         effects[250] = 'C';
         effects[15] = 'F';
-	} else if (isPartOf(xm->type, "Imago Orpheus")) {
+	} else if (isPartOf(type, "Imago Orpheus")) {
 		effects[1] = '1';
         effects[2] = '2';
         effects[3] = '3';
@@ -525,7 +527,7 @@ void generateEffectsTable(xmp_module *xm) {
         effects[33] = 'X';
         effects[34] = 'Y';
         effects[35] = 'Z';
-	} else if (isPartOf(xm->type, "S3M")) {
+	} else if (isPartOf(type, "S3M")) {
 		effects[163] = 'A';
         effects[11] = 'B';
         effects[13] = 'C';
@@ -548,7 +550,7 @@ void generateEffectsTable(xmp_module *xm) {
         effects[8] = 'X';
         effects[141] = 'X';
         effects[14] = 'S';
-	} else if (isPartOf(xm->type, "IT")) {
+	} else if (isPartOf(type, "IT")) {
 		effects[163] = 'A';
 		effects[11] = 'B';
 		effects[142] = 'C';
@@ -584,7 +586,7 @@ void generateEffectsTable(xmp_module *xm) {
 		effects[132] = 'S';
 		effects[139] = 'S';
 		effects[140] = 'S';
-	} else if (isPartOf(xm->type, "LIQ")) {
+	} else if (isPartOf(type, "LIQ")) {
 		effects[0] = 'A';
 		effects[171] = 'B';
 		effects[13] = 'C';
@@ -601,7 +603,7 @@ void generateEffectsTable(xmp_module *xm) {
 		effects[4] = 'V';
 		effects[5] = 'X';
 		effects[6] = 'Y';
-	} else if (isPartOf(xm->type, "Oktalyzer")) {
+	} else if (isPartOf(type, "Oktalyzer")) {
 		effects[1] = '1';
 		effects[2] = '2';
 		effects[112] = '0';
@@ -618,7 +620,7 @@ void generateEffectsTable(xmp_module *xm) {
 		effects[174] = 'E';
 		effects[17] = 'E';
 		effects[0] = '0';
-	} else if (isPartOf(xm->type, "STX")) {
+	} else if (isPartOf(type, "STX")) {
 		effects[15] = 'A';
 		effects[11] = 'B';
 		effects[13] = 'C';
@@ -629,7 +631,7 @@ void generateEffectsTable(xmp_module *xm) {
 		effects[4] = 'H';
 		effects[29] = 'I';
 		effects[0] = 'J';
-	} else if (isPartOf(xm->type, "Funk")) {
+	} else if (isPartOf(type, "Funk")) {
 		effects[121] = 'A';
 		effects[120] = 'B';
 		effects[122] = 'C';
