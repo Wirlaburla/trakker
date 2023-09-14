@@ -34,8 +34,8 @@ WINDOW *dis;
 WINDOW *tab;
 
 int main(int argc, char *argv[]) {
-    int err;
-    snd_pcm_t *handle;
+	int err;
+	snd_pcm_t *handle;
 	snd_pcm_sframes_t frames;
 	if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
 		fprintf(stderr, "Playback open error: %s\n", snd_strerror(err));
@@ -62,63 +62,63 @@ int main(int argc, char *argv[]) {
 	if (has_colors() == TRUE) {
 		start_color();
 		if (can_change_color() == TRUE) {	
-	   		// Primary Background
-	   		init_pair(1, COLOR_BLACK, 8);
-	   		// Inactive Section
-	   		init_pair(2, 8, 7);
-	   		// Active Section
-	   		init_pair(3, 0, 12);
-	   		// Display
-	   		init_pair(4, 7, COLOR_BLACK);
-	   		// Display Row#
-	   		init_pair(5, 3, COLOR_BLACK);
-	   		// Display Playhead
-	   		init_pair(6, COLOR_WHITE, COLOR_BLUE);
-	   		// Display Playhead Row#
-	   		init_pair(7, COLOR_YELLOW, COLOR_BLUE);
-	   		// Display Stopped Playhead
-	   		init_pair(8, COLOR_WHITE, COLOR_RED);
-	   		// Display Stopped Playhead Row#
-	   		init_pair(9, COLOR_YELLOW, COLOR_RED);
+			// Primary Background
+			init_pair(1, COLOR_BLACK, 8);
+			// Inactive Section
+			init_pair(2, 8, 7);
+			// Active Section
+			init_pair(3, 0, 12);
+			// Display
+			init_pair(4, 7, COLOR_BLACK);
+			// Display Row#
+			init_pair(5, 3, COLOR_BLACK);
+			// Display Playhead
+			init_pair(6, COLOR_WHITE, COLOR_BLUE);
+			// Display Playhead Row#
+			init_pair(7, COLOR_YELLOW, COLOR_BLUE);
+			// Display Stopped Playhead
+			init_pair(8, COLOR_WHITE, COLOR_RED);
+			// Display Stopped Playhead Row#
+			init_pair(9, COLOR_YELLOW, COLOR_RED);
 		} else {
 			// Primary Background
-	   		init_pair(1, COLOR_BLACK, 8);
-	   		// Inactive Section
-	   		init_pair(2, COLOR_BLACK, COLOR_WHITE);
-	   		// Active Section
-	   		init_pair(3, COLOR_BLACK, COLOR_CYAN);
-	   		// Display
-	   		init_pair(4, COLOR_WHITE, COLOR_BLACK);
-	   		// Display Row#
-	   		init_pair(5, COLOR_YELLOW, COLOR_BLACK);
-	   		// Display Playhead
-	   		init_pair(6, COLOR_WHITE, COLOR_BLUE);
-	   		// Display Playhead Row#
-	   		init_pair(7, COLOR_YELLOW, COLOR_BLUE);
-	   		// Display Stopped Playhead
-	   		init_pair(8, COLOR_WHITE, COLOR_RED);
-	   		// Display Stopped Playhead Row#
-	   		init_pair(9, COLOR_YELLOW, COLOR_RED);
+			init_pair(1, COLOR_BLACK, 8);
+			// Inactive Section
+			init_pair(2, COLOR_BLACK, COLOR_WHITE);
+			// Active Section
+			init_pair(3, COLOR_BLACK, COLOR_CYAN);
+			// Display
+			init_pair(4, COLOR_WHITE, COLOR_BLACK);
+			// Display Row#
+			init_pair(5, COLOR_YELLOW, COLOR_BLACK);
+			// Display Playhead
+			init_pair(6, COLOR_WHITE, COLOR_BLUE);
+			// Display Playhead Row#
+			init_pair(7, COLOR_YELLOW, COLOR_BLUE);
+			// Display Stopped Playhead
+			init_pair(8, COLOR_WHITE, COLOR_RED);
+			// Display Stopped Playhead Row#
+			init_pair(9, COLOR_YELLOW, COLOR_RED);
 		}
 	} else {
-	    // Primary Background
-	   init_pair(1, COLOR_BLACK, COLOR_BLACK);
-	   // Inactive Section
-	   init_pair(2, COLOR_WHITE, COLOR_BLACK);
-	   // Active Section
-	   init_pair(3, COLOR_BLACK, COLOR_WHITE);
-	   // Display
-	   init_pair(4, COLOR_WHITE, COLOR_BLACK);
-	   // Display Row#
-	   init_pair(5, COLOR_WHITE, COLOR_BLACK);
-	   // Display Playhead
-	   init_pair(6, COLOR_BLACK, COLOR_WHITE);
-	   // Display Playhead Row#
-	   init_pair(7, COLOR_BLACK, COLOR_WHITE);
-	   // Display Stopped Playhead
-	   init_pair(8, COLOR_WHITE, COLOR_BLACK);
-	   // Display Stopped Playhead Row#
-	   init_pair(9, COLOR_WHITE, COLOR_BLACK);
+		// Primary Background
+		init_pair(1, COLOR_BLACK, COLOR_BLACK);
+		// Inactive Section
+		init_pair(2, COLOR_WHITE, COLOR_BLACK);
+		// Active Section
+		init_pair(3, COLOR_BLACK, COLOR_WHITE);
+		// Display
+		init_pair(4, COLOR_WHITE, COLOR_BLACK);
+		// Display Row#
+		init_pair(5, COLOR_WHITE, COLOR_BLACK);
+		// Display Playhead
+		init_pair(6, COLOR_BLACK, COLOR_WHITE);
+		// Display Playhead Row#
+		init_pair(7, COLOR_BLACK, COLOR_WHITE);
+		// Display Stopped Playhead
+		init_pair(8, COLOR_WHITE, COLOR_BLACK);
+		// Display Stopped Playhead Row#
+		init_pair(9, COLOR_WHITE, COLOR_BLACK);
 	}
 	
 	cbreak();
@@ -141,13 +141,13 @@ int main(int argc, char *argv[]) {
 	bool displayChanged;
 	display = 0; displayChanged = true;
 	while (true) {
-	    xmp_get_frame_info(xc, &xfi);
+		xmp_get_frame_info(xc, &xfi);
 		if (xmp_play_frame(xc) != 0 && !stopped) break;
 		if (xfi.loop_count > looped && !loop) break;
-	    else looped = xfi.loop_count;
-	    
-	    keys:
-	    timeout(stopped?-1:0);
+		else looped = xfi.loop_count;
+			
+		keys:
+		timeout(stopped?-1:0);
 		if ((key = getch()) != 0) {
 			vol = xmp_get_player(xc, XMP_PLAYER_VOLUME);
 			switch (key) {
@@ -206,28 +206,28 @@ int main(int argc, char *argv[]) {
 			};
 			renderTrack(&xmi, &xfi);
 		}
-	    
-	    if (displayChanged) {
-	    	werase(dis);
-	    	werase(tab);
-	        hOffset = 0;
+			
+		if (displayChanged) {
+			werase(dis);
+			werase(tab);
+			hOffset = 0;
 			vOffset = 0;
-	        move(0, 0);
-	        for (int d = 0; d < sizeof(pages)/sizeof(*pages); d++) {
-	            printw(" ");
-	            chtype tpair;
-	            if (display == d) tpair = COLOR_PAIR(3);
-	            else tpair = COLOR_PAIR(2);
-	            attron(tpair);
-	            printw(" "); printw(pages[d]); printw(" ");
-	            attroff(tpair);
-	            printw(" ");
-	        }
-            mode = 0;
-            wmove(tab, 0, 0);
-            displayChanged = false;
-	    }
-	    
+			move(0, 0);
+			for (int d = 0; d < sizeof(pages)/sizeof(*pages); d++) {
+				printw(" ");
+				chtype tpair;
+				if (display == d) tpair = COLOR_PAIR(3);
+				else tpair = COLOR_PAIR(2);
+				attron(tpair);
+				printw(" "); printw(pages[d]); printw(" ");
+				attroff(tpair);
+				printw(" ");
+			}
+			mode = 0;
+			wmove(tab, 0, 0);
+			displayChanged = false;
+		}
+			
 		if (!stopped) {
 			frames = snd_pcm_bytes_to_frames(handle, xfi.buffer_size);
 			if (snd_pcm_writei(handle, xfi.buffer, frames) < 0) {
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 	endwin();
 	xmp_end_player(xc);
 	xmp_release_module(xc);
-    xmp_free_context(xc);
+	xmp_free_context(xc);
 	if ((err = snd_pcm_drain(handle)) < 0) {
 		printf("snd_pcm_drain failed: %s\n", snd_strerror(err));
 	}
@@ -284,8 +284,8 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 	werase(dis);
 	wclrtoeol(tab);
 	mvwprintw(tab, 0, 1, mi->mod->name);
-    mvwprintw(
-    	tab, 
+		mvwprintw(
+			tab, 
 		0, COLS-12, 
 		"%02u:%02u/%02u:%02u", 
 		((fi->time / 1000) / 60) % 60, 
@@ -337,14 +337,14 @@ void renderInfo(xmp_module_info *mi, xmp_frame_info *fi) {
 
 void renderAbout() {
 	wattron(dis, A_BOLD);
-	mvwprintw(dis, 1-vOffset, 2, "========           \\\\    // \\\\   //");
-	mvwprintw(dis, 2-vOffset, 2, "   ||               ||  //   || //");
-	mvwprintw(dis, 3-vOffset, 2, "   ||                \\\\//    \\\\//");
-	mvwprintw(dis, 4-vOffset, 2, "   || //==\\\\ //===|| ||\\\\    ||\\\\   //===\\\\ //===\\\\");
-	mvwprintw(dis, 5-vOffset, 2, "   || ||    ||    |  || \\\\   || \\\\  ||===// ||");
-	mvwprintw(dis, 6-vOffset, 2, "   || ||     \\\\===|| ||  \\\\  ||  \\\\ \\\\___/  ||");
-	mvwprintw(dis, 8-vOffset, 1, "TRAKKER    v%s", TRAKKER_VERSION);
-	mvwprintw(dis, 9-vOffset, 1, "libXMP     v%s", xmp_version);
+	mvwprintw(dis, 1-vOffset, 2, "========					\\\\		// \\\\	//");
+	mvwprintw(dis, 2-vOffset, 2, "	||							||  //	|| //");
+	mvwprintw(dis, 3-vOffset, 2, "	||								\\\\//		\\\\//");
+	mvwprintw(dis, 4-vOffset, 2, "	|| //==\\\\ //===|| ||\\\\		||\\\\	//===\\\\ //===\\\\");
+	mvwprintw(dis, 5-vOffset, 2, "	|| ||		||		|  || \\\\	|| \\\\  ||===// ||");
+	mvwprintw(dis, 6-vOffset, 2, "	|| ||		 \\\\===|| ||  \\\\  ||  \\\\ \\\\___/  ||");
+	mvwprintw(dis, 8-vOffset, 1, "TRAKKER		v%s", TRAKKER_VERSION);
+	mvwprintw(dis, 9-vOffset, 1, "libXMP		 v%s", xmp_version);
 	
 	mvwprintw(dis, 11-vOffset, 1, "[Spacebar]");
 	mvwprintw(dis, 12-vOffset, 1, "Number Keys");
@@ -475,82 +475,82 @@ void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi) {
 void generateEffectsTable(char* type) {
 	if (isPartOf(type, "669")) {
 		addToEffects(96, 'A', true);
-        addToEffects(97, 'B', true);
-        addToEffects(98, 'C', true);
-        addToEffects(99, 'D', true);
-        addToEffects(100, 'E', true);
-        addToEffects(126, 'F', true);
+		addToEffects(97, 'B', true);
+		addToEffects(98, 'C', true);
+		addToEffects(99, 'D', true);
+		addToEffects(100, 'E', true);
+		addToEffects(126, 'F', true);
 	} else if (isPartOf(type, "Farandole")) {
 		addToEffects(249, '1', true);
-        addToEffects(248, '2', true);
-        addToEffects(122, '3', true);
-        addToEffects(251, '4', true);
-        addToEffects(254, '5', true);
-        addToEffects(4, '6', true);
-        addToEffects(256, '7', true);
-        addToEffects(252, '8', true);
-        addToEffects(123, '9', true);
-        addToEffects(250, 'C', true);
-        addToEffects(15, 'F', true);
+		addToEffects(248, '2', true);
+		addToEffects(122, '3', true);
+		addToEffects(251, '4', true);
+		addToEffects(254, '5', true);
+		addToEffects(4, '6', true);
+		addToEffects(256, '7', true);
+		addToEffects(252, '8', true);
+		addToEffects(123, '9', true);
+		addToEffects(250, 'C', true);
+		addToEffects(15, 'F', true);
 	} else if (isPartOf(type, "Imago Orpheus")) {
 		addToEffects(1, '1', true);
-        addToEffects(2, '2', true);
-        addToEffects(3, '3', true);
-        addToEffects(4, '4', true);
-        addToEffects(5, '5', true);
-        addToEffects(6, '6', true);
-        addToEffects(7, '7', true);
-        addToEffects(8, '8', true);
-        addToEffects(9, '9', true);
-        addToEffects(10, 'A', true);
-        addToEffects(11, 'B', true);
-        addToEffects(12, 'C', true);
-        addToEffects(13, 'D', true);
-        addToEffects(14, 'E', true);
-        addToEffects(15, 'F', true);
-        addToEffects(16, 'G', true);
-        addToEffects(17, 'H', true);
-        addToEffects(18, 'I', true);
-        addToEffects(19, 'J', true);
-        addToEffects(20, 'K', true);
-        addToEffects(21, 'L', true);
-        addToEffects(22, 'M', true);
-        addToEffects(23, 'N', true);
-        addToEffects(24, 'O', true);
-        addToEffects(25, 'P', true);
-        addToEffects(26, 'Q', true);
-        addToEffects(27, 'R', true);
-        addToEffects(28, 'S', true);
-        addToEffects(29, 'T', true);
-        addToEffects(30, 'U', true);
-        addToEffects(31, 'V', true);
-        addToEffects(32, 'W', true);
-        addToEffects(33, 'X', true);
-        addToEffects(34, 'Y', true);
-        addToEffects(35, 'Z', true);
+		addToEffects(2, '2', true);
+		addToEffects(3, '3', true);
+		addToEffects(4, '4', true);
+		addToEffects(5, '5', true);
+		addToEffects(6, '6', true);
+		addToEffects(7, '7', true);
+		addToEffects(8, '8', true);
+		addToEffects(9, '9', true);
+		addToEffects(10, 'A', true);
+		addToEffects(11, 'B', true);
+		addToEffects(12, 'C', true);
+		addToEffects(13, 'D', true);
+		addToEffects(14, 'E', true);
+		addToEffects(15, 'F', true);
+		addToEffects(16, 'G', true);
+		addToEffects(17, 'H', true);
+		addToEffects(18, 'I', true);
+		addToEffects(19, 'J', true);
+		addToEffects(20, 'K', true);
+		addToEffects(21, 'L', true);
+		addToEffects(22, 'M', true);
+		addToEffects(23, 'N', true);
+		addToEffects(24, 'O', true);
+		addToEffects(25, 'P', true);
+		addToEffects(26, 'Q', true);
+		addToEffects(27, 'R', true);
+		addToEffects(28, 'S', true);
+		addToEffects(29, 'T', true);
+		addToEffects(30, 'U', true);
+		addToEffects(31, 'V', true);
+		addToEffects(32, 'W', true);
+		addToEffects(33, 'X', true);
+		addToEffects(34, 'Y', true);
+		addToEffects(35, 'Z', true);
 	} else if (isPartOf(type, "S3M")) {
 		addToEffects(163, 'A', false);
-        addToEffects(11, 'B', true);
-        addToEffects(13, 'C', true);
-        addToEffects(10, 'D', true);
-        addToEffects(2, 'E', true);
-        addToEffects(1, 'F', true);
-        addToEffects(3, 'G', true);
-        addToEffects(4, 'H', true);
-        addToEffects(29, 'I', true);
-        addToEffects(180, 'J', true);
-        addToEffects(6, 'K', true);
-        addToEffects(5, 'L', true);
-        addToEffects(9, 'O', true);
-        addToEffects(27, 'Q', true);
-        addToEffects(7, 'R', true);
-        addToEffects(254, 'S', true);
-        addToEffects(171, 'T', false);
-        addToEffects(172, 'U', true);
-        addToEffects(16, 'V', true);
-        addToEffects(8, 'X', true);
-        addToEffects(141, 'X', true);
-        addToEffects(14, 'S', true);
+		addToEffects(11, 'B', true);
+		addToEffects(13, 'C', true);
+		addToEffects(10, 'D', true);
+		addToEffects(2, 'E', true);
+		addToEffects(1, 'F', true);
+		addToEffects(3, 'G', true);
+		addToEffects(4, 'H', true);
+		addToEffects(29, 'I', true);
+		addToEffects(180, 'J', true);
+		addToEffects(6, 'K', true);
+		addToEffects(5, 'L', true);
+		addToEffects(9, 'O', true);
+		addToEffects(27, 'Q', true);
+		addToEffects(7, 'R', true);
+		addToEffects(254, 'S', true);
+		addToEffects(171, 'T', false);
+		addToEffects(172, 'U', true);
+		addToEffects(16, 'V', true);
+		addToEffects(8, 'X', true);
+		addToEffects(141, 'X', true);
+		addToEffects(14, 'S', true);
 	} else if (isPartOf(type, "IT")) {
 		addToEffects(163, 'A', false);
 		addToEffects(11, 'B', true);
@@ -598,7 +598,7 @@ void generateEffectsTable(char* type) {
 		addToEffects(14, 'M', true);
 		addToEffects(3, 'N', true);
 		addToEffects(9, 'O', true);
-    	addToEffects(163, 'S', true);
+		addToEffects(163, 'S', true);
 		addToEffects(7, 'T', true);
 		addToEffects(1, 'U', true);
 		addToEffects(4, 'V', true);
@@ -615,7 +615,7 @@ void generateEffectsTable(char* type) {
 		addToEffects(156, '6', true);
 		addToEffects(11, 'B', true);
 		addToEffects(15, 'F', true);
-    	addToEffects(157, '5', true);
+		addToEffects(157, '5', true);
 		addToEffects(12, 'C', true);
 		addToEffects(10, 'A', true);
 		addToEffects(174, 'E', true);
@@ -689,18 +689,18 @@ bool isPartOf(char* w1, char* w2) {
 	int i=0;
 	int j=0;
 	while(w1[i]!='\0'){
-    	if(w1[i] == w2[j]) {
-        	int init = i;
-        	while (w1[i] == w2[j] && w2[j]!='\0') {
-            	j++;
-            	i++;
-        	}
-        	if(w2[j]=='\0') {
-            	return true;
-        	}
-        	j=0;
-    	}
-    	i++;
+		if(w1[i] == w2[j]) {
+			int init = i;
+			while (w1[i] == w2[j] && w2[j]!='\0') {
+				j++;
+				i++;
+			}
+			if(w2[j]=='\0') {
+				return true;
+			}
+			j=0;
+		}
+		i++;
 	}
 	return false;
 }
