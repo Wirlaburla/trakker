@@ -2,10 +2,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
+#include <map>
 
 #include <alsa/asoundlib.h>
 #include <xmp.h>
 #include <ncurses.h>
+#include "trakker.h"
 #include "trakker_version.h"
 
 #define SAMPLERATE 48000
@@ -25,19 +27,11 @@ int vOffset = 0;
 int looped = 0;
 bool stopped;
 bool loop;
+std::map<int, char> effects;
 
 WINDOW *dis;
 WINDOW *tab;
-void destroyWindows();
-void createWindows();
-void renderInfo(xmp_module_info *mi, xmp_frame_info *fi);
-void renderAbout();
-void renderTrack(xmp_module_info *mi, xmp_frame_info *fi);
-void renderRows(xmp_module_info *mi, xmp_frame_info *fi);
-void renderChannels(xmp_module_info *mi, xmp_frame_info *fi);
-void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi);
 
-char getEffectType(int i);
 int main(int argc, char *argv[]) {
     int err;
     snd_pcm_t *handle;
@@ -57,12 +51,10 @@ int main(int argc, char *argv[]) {
 	if (xmp_load_module(xc, argv[1]) != 0) {
 		fprintf(stderr, "Failed to load Module: %s\n", argv[1]);
 		exit(EXIT_FAILURE);
-	}
+	} else printf("Loaded Module: \"%s\"\n", argv[1]);
 	
 	struct xmp_module_info xmi;
 	struct xmp_frame_info xfi;
-	
-	printf("Loading Module: \"%s\"\n", argv[1]);
 	
 	initscr();
 	
@@ -141,6 +133,7 @@ int main(int argc, char *argv[]) {
 	int row, pos;
 	xmp_get_module_info(xc, &xmi);
 	row = pos = -1;
+	generateEffectsTable(xmi.mod);
 	xmp_start_player(xc, SAMPLERATE, 0);
 	
 	int key;
@@ -175,6 +168,12 @@ int main(int argc, char *argv[]) {
 					break;
 				case KEY_DOWN: // Seek Down
 					if (vOffset < vMax) vOffset++;
+					break;
+				case KEY_PPAGE:
+					if (vOffset > vMin + LINES-6) vOffset-=(LINES-5);
+					break;
+				case KEY_NPAGE:
+					if (vOffset < vMax - LINES-5) vOffset+=(LINES-5);
 					break;
 				case 10:
 					hOffset = 0;
@@ -280,6 +279,7 @@ void createWindows() {
 
 void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 	werase(dis);
+	wclrtoeol(tab);
 	mvwprintw(tab, 0, 1, mi->mod->name);
     mvwprintw(
     	tab, 
@@ -292,7 +292,7 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 	);
 	mvwprintw(tab, 1, COLS-10, "VOL: %i%%", vol);
 	mvwprintw(tab, 1, 1, "%i/%ibpm", fi->speed, fi->bpm);
-	mvwprintw(tab, LINES-2, (COLS/2)-4, stopped?"STOPPED":"PLAYING");
+	mvwprintw(tab, LINES-2, (COLS/2)-4, "%s%s", stopped?"STOPPED":"PLAYING", loop?" [L]":"");
 	if (display == 0) {
 		renderInfo(mi, fi);
 	} else if (display == 1) {
@@ -311,28 +311,32 @@ void renderTrack(xmp_module_info *mi, xmp_frame_info *fi) {
 
 void renderInfo(xmp_module_info *mi, xmp_frame_info *fi) {
 	wattron(dis, A_BOLD);
-	mvwprintw(dis, 3-vOffset, 0, "Format:");
-	mvwprintw(dis, 4-vOffset, 0, "Instruments:");
-	mvwprintw(dis, 5-vOffset, 0, "Channels:");
-	mvwprintw(dis, 6-vOffset, 0, "Looping:");
-	mvwprintw(dis, 8-vOffset, 0, "Comments:");
+	mvwprintw(dis, 1-vOffset, 1, "Format:");
+	mvwprintw(dis, 2-vOffset, 1, "Channels:");
+	mvwprintw(dis, 3-vOffset, 1, "Looping:");
+	mvwprintw(dis, 5-vOffset, 1, "Instruments:");
+	mvwprintw(dis, (7+mi->mod->ins)-vOffset, 1, "Samples:");
 	wattroff(dis, A_BOLD);
 	
-	mvwprintw(dis, 3-vOffset, 16, mi->mod->type);
-	mvwprintw(dis, 4-vOffset, 16, "%i", mi->mod->ins);
-	mvwprintw(dis, 5-vOffset, 16, "%i", mi->mod->chn);
-	mvwprintw(dis, 6-vOffset, 16, loop?"YES":"NO");
+	mvwprintw(dis, 1-vOffset, 16, mi->mod->type);
+	mvwprintw(dis, 2-vOffset, 16, "%i", mi->mod->chn);
+	mvwprintw(dis, 3-vOffset, 16, loop?"YES":"NO");
+	mvwprintw(dis, 5-vOffset, 16, "%i", mi->mod->ins);
+	mvwprintw(dis, (7+mi->mod->ins)-vOffset, 16, "%i", mi->mod->smp);
 	
-	if (mi->comment != NULL) {
-		mvwprintw(dis, 9-vOffset, 0, "%s", mi->comment);
+	for (int xi = 0; xi < mi->mod->ins; xi++) {
+		mvwprintw(dis, xi+6-vOffset, 1, "[%02X] %s", xi, mi->mod->xxi[xi].name);
+	}
+	for (int xs = 0; xs < mi->mod->smp; xs++) {
+		mvwprintw(dis, xs+(8+mi->mod->ins)-vOffset, 1, "[%02X] %s", xs, mi->mod->xxs[xs].name);
 	}
 }
 
 void renderAbout() {
 	wattron(dis, A_BOLD);
-	mvwprintw(dis, 1-vOffset, 2, "========            ||  //  ||  //");
-	mvwprintw(dis, 2-vOffset, 2, "   ||               || //   || //");
-	mvwprintw(dis, 3-vOffset, 2, "   ||               ||//    ||//");
+	mvwprintw(dis, 1-vOffset, 2, "========           \\\\    // \\\\   //");
+	mvwprintw(dis, 2-vOffset, 2, "   ||               ||  //   || //");
+	mvwprintw(dis, 3-vOffset, 2, "   ||                \\\\//    \\\\//");
 	mvwprintw(dis, 4-vOffset, 2, "   || //==\\\\ //===|| ||\\\\    ||\\\\   //===\\\\ //===\\\\");
 	mvwprintw(dis, 5-vOffset, 2, "   || ||    ||    |  || \\\\   || \\\\  ||===// ||");
 	mvwprintw(dis, 6-vOffset, 2, "   || ||     \\\\===|| ||  \\\\  ||  \\\\ \\\\___/  ||");
@@ -406,7 +410,7 @@ void renderRows(xmp_module_info *mi, xmp_frame_info *fi) {
 			else snprintf(vol, 4, "...");
 				
 			char f1;
-			if ((f1 = getEffectType(event.fxt)) != 0) snprintf(efx, 4, "%c%02X", f1, event.fxp);
+			if ((f1 = effects[event.fxt]) != NULL) snprintf(efx, 4, "%c%02X", f1, event.fxp);
 			else snprintf(efx, 4, "...");
 			sprintf(lnbuf, "|%s %s %s %s", note, ins, vol, efx);
 			for (int z = 0; z < chnsize; z++) {
@@ -465,38 +469,228 @@ void renderInstruments(xmp_module_info *mi, xmp_frame_info *fi) {
 	}
 }
 
-char getEffectType(int i) {
-	// The effect type characters are so strange to me.
-	// They make absolutely no sense in why it's set up this way.
-	// Maybe I'm mega stupid right now but this is all of the IT
-	// formats effects, so maybe this will cover everything enough.
-	// Broken, but not crashy-broken anymore.
-	switch(i) {
-		case 1: return 'F';
-		case 2: return 'E';
-		case 3: return 'G';
-		case 4: return 'H';
-		case 5: return 'L';
-		case 6: return 'K';
-		case 7: return 'R';
-		case 8: return 'X';
-		case 9: return 'O';
-		case 10: return 'D';
-		case 11: return 'B';
-		case 16: return 'V';
-		case 17: return 'W';
-		case 27: return 'Q';
-		case 29: return 'I';
-		case 128: return 'M';
-		case 129: return 'N';
-		case 132: return 'Z';
-		case 135: return 'T';
-		case 137: return 'P';
-		case 138: return 'Y';
-		case 142: return 'C';
-		case 163: return 'A';
-		case 172: return 'U';
-		case 180: return 'J';
-		default: return 0x00;
+void generateEffectsTable(xmp_module *xm) {
+	if (isPartOf(xm->type, "669")) {
+		effects[96] = 'A';
+        effects[97] = 'B';
+        effects[98] = 'C';
+        effects[99] = 'D';
+        effects[100] = 'E';
+        effects[126] = 'F';
+	} else if (isPartOf(xm->type, "Farandole")) {
+		effects[249] = '1';
+        effects[248] = '2';
+        effects[122] = '3';
+        effects[251] = '4';
+        effects[254] = '5';
+        effects[4] = '6';
+        effects[256] = '7';
+        effects[252] = '8';
+        effects[123] = '9';
+        effects[250] = 'C';
+        effects[15] = 'F';
+	} else if (isPartOf(xm->type, "Imago Orpheus")) {
+		effects[1] = '1';
+        effects[2] = '2';
+        effects[3] = '3';
+        effects[4] = '4';
+        effects[5] = '5';
+        effects[6] = '6';
+        effects[7] = '7';
+        effects[8] = '8';
+        effects[9] = '9';
+        effects[10] = 'A';
+        effects[11] = 'B';
+        effects[12] = 'C';
+        effects[13] = 'D';
+        effects[14] = 'E';
+        effects[15] = 'F';
+        effects[16] = 'G';
+        effects[17] = 'H';
+        effects[18] = 'I';
+        effects[19] = 'J';
+        effects[20] = 'K';
+        effects[21] = 'L';
+        effects[22] = 'M';
+        effects[23] = 'N';
+        effects[24] = 'O';
+        effects[25] = 'P';
+        effects[26] = 'Q';
+        effects[27] = 'R';
+        effects[28] = 'S';
+        effects[29] = 'T';
+        effects[30] = 'U';
+        effects[31] = 'V';
+        effects[32] = 'W';
+        effects[33] = 'X';
+        effects[34] = 'Y';
+        effects[35] = 'Z';
+	} else if (isPartOf(xm->type, "S3M")) {
+		effects[163] = 'A';
+        effects[11] = 'B';
+        effects[13] = 'C';
+        effects[10] = 'D';
+        effects[2] = 'E';
+        effects[1] = 'F';
+        effects[3] = 'G';
+        effects[4] = 'H';
+        effects[29] = 'I';
+        effects[180] = 'J';
+        effects[6] = 'K';
+        effects[5] = 'L';
+        effects[9] = 'O';
+        effects[27] = 'Q';
+        effects[7] = 'R';
+        effects[254] = 'S';
+        effects[171] = 'T';
+        effects[172] = 'U';
+        effects[16] = 'V';
+        effects[8] = 'X';
+        effects[141] = 'X';
+        effects[14] = 'S';
+	} else if (isPartOf(xm->type, "IT")) {
+		effects[163] = 'A';
+		effects[11] = 'B';
+		effects[142] = 'C';
+		effects[10] = 'D';
+		effects[2] = 'E';
+		effects[1] = 'F';
+		effects[3] = 'G';
+		effects[4] = 'H';
+		effects[29] = 'I';
+		effects[180] = 'J';
+		effects[6] = 'K';
+		effects[5] = 'L';
+		effects[128] = 'M';
+		effects[129] = 'N';
+		effects[9] = 'O';
+		effects[137] = 'P';
+		effects[27] = 'Q';
+		effects[7] = 'R';
+		effects[254] = 'S';
+		effects[135] = 'T';
+		effects[172] = 'U';
+		effects[16] = 'V';
+		effects[17] = 'W';
+		effects[8] = 'X';
+		effects[138] = 'Y';
+		effects[141] = 'S';
+		effects[136] = 'S';
+		effects[14] = 'S';
+		effects[192] = 'c';
+		effects[193] = 'd';
+		effects[194] = 'a';
+		effects[195] = 'b';
+		effects[132] = 'S';
+		effects[139] = 'S';
+		effects[140] = 'S';
+	} else if (isPartOf(xm->type, "LIQ")) {
+		effects[0] = 'A';
+		effects[171] = 'B';
+		effects[13] = 'C';
+		effects[2] = 'D';
+		effects[172] = 'F';
+		effects[11] = 'J';
+		effects[10] = 'L';
+		effects[14] = 'M';
+		effects[3] = 'N';
+		effects[9] = 'O';
+        effects[163] = 'S';
+		effects[7] = 'T';
+		effects[1] = 'U';
+		effects[4] = 'V';
+		effects[5] = 'X';
+		effects[6] = 'Y';
+	} else if (isPartOf(xm->type, "Oktalyzer")) {
+		effects[1] = '1';
+		effects[2] = '2';
+		effects[112] = '0';
+		effects[113] = '0';
+		effects[114] = '0';
+		effects[115] = '6';
+		effects[116] = '5';
+		effects[156] = '6';
+		effects[11] = 'B';
+		effects[15] = 'F';
+        effects[157] = '5';
+		effects[12] = 'C';
+		effects[10] = 'A';
+		effects[174] = 'E';
+		effects[17] = 'E';
+		effects[0] = '0';
+	} else if (isPartOf(xm->type, "STX")) {
+		effects[15] = 'A';
+		effects[11] = 'B';
+		effects[13] = 'C';
+		effects[10] = 'D';
+		effects[2] = 'E';
+		effects[1] = 'F';
+		effects[3] = 'G';
+		effects[4] = 'H';
+		effects[29] = 'I';
+		effects[0] = 'J';
+	} else if (isPartOf(xm->type, "Funk")) {
+		effects[121] = 'A';
+		effects[120] = 'B';
+		effects[122] = 'C';
+		effects[123] = 'D';
+		effects[124] = 'G';
+		effects[125] = 'H';
+		effects[0] = 'L';
+		effects[12] = 'N';
+		effects[127] = 'O';
+		effects[14] = 'O';
+		effects[15] = 'O';
+	} else {
+		effects[0] = '0';
+		effects[1] = '1';
+		effects[2] = '2';
+		effects[3] = '3';
+		effects[4] = '4';
+		effects[5] = '5';
+		effects[6] = '6';
+		effects[7] = '7';
+		effects[8] = '8';
+		effects[9] = '9';
+		effects[10] = 'A';
+		effects[11] = 'B';
+		effects[12] = 'C';
+		effects[13] = 'D';
+		effects[14] = 'E';
+		effects[15] = 'F';
+        effects[16] = 'G';
+		effects[27] = 'Q';
+		effects[181] = 'P';
+		effects[17] = 'H';
+		effects[21] = 'L';
+		effects[164] = 'c';
+		effects[33] = 'X';
+		effects[20] = 'K';
+		effects[25] = 'P';
+		effects[29] = 'T';
+		effects[146] = '4';
+		effects[160] = 'x';
+		effects[161] = 'x';
+		effects[171] = 'F';
 	}
+}
+
+bool isPartOf(char* w1, char* w2) {
+	int i=0;
+	int j=0;
+	while(w1[i]!='\0'){
+    	if(w1[i] == w2[j]) {
+        	int init = i;
+        	while (w1[i] == w2[j] && w2[j]!='\0') {
+            	j++;
+            	i++;
+        	}
+        	if(w2[j]=='\0') {
+            	return true;
+        	}
+        	j=0;
+    	}
+    	i++;
+	}
+	return false;
 }
