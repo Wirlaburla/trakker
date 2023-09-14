@@ -454,17 +454,17 @@ void renderAbout() {
 	mvwprintw(dis, 19-vOffset, 1, "[[] and []]");
 	wattroff(dis, A_BOLD);
 	
-	mvwprintw(dis, 8-vOffset, 16, "%s", TRAKKER_VERSION);
-	mvwprintw(dis, 9-vOffset, 16, "%s", xmp_version);
-	mvwprintw(dis, 11-vOffset, 16, "Play/Pause");
-	mvwprintw(dis, 12-vOffset, 16, "Change Tab");
-	mvwprintw(dis, 13-vOffset, 16, "Change horizontal offset.");
-	mvwprintw(dis, 14-vOffset, 16, "Change vertical offset.");
-	mvwprintw(dis, 15-vOffset, 16, "Control volume");
-	mvwprintw(dis, 16-vOffset, 16, "Reset Display");
-	mvwprintw(dis, 17-vOffset, 16, "Toggle Loop");
-	mvwprintw(dis, 18-vOffset, 16, "Scroll vertically per page.");
-	mvwprintw(dis, 19-vOffset, 16, "Change stereo mixing.");
+	mvwprintw(dis, 8-vOffset, 20, "%s", TRAKKER_VERSION);
+	mvwprintw(dis, 9-vOffset, 20, "%s", xmp_version);
+	mvwprintw(dis, 11-vOffset, 20, "Play/Pause");
+	mvwprintw(dis, 12-vOffset, 20, "Change Tab");
+	mvwprintw(dis, 13-vOffset, 20, "Change horizontal offset.");
+	mvwprintw(dis, 14-vOffset, 20, "Change vertical offset.");
+	mvwprintw(dis, 15-vOffset, 20, "Control volume");
+	mvwprintw(dis, 16-vOffset, 20, "Reset Display");
+	mvwprintw(dis, 17-vOffset, 20, "Toggle Loop");
+	mvwprintw(dis, 18-vOffset, 20, "Scroll vertically per page.");
+	mvwprintw(dis, 19-vOffset, 20, "Change stereo mixing.");
 }
 
 void renderRows(xmp_module_info *mi, xmp_frame_info *fi) {
