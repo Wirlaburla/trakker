@@ -445,20 +445,26 @@ void renderAbout() {
 	
 	mvwprintw(dis, 11-vOffset, 1, "[Spacebar]");
 	mvwprintw(dis, 12-vOffset, 1, "Number Keys");
-	mvwprintw(dis, 13-vOffset, 1, "Arrow Keys");
-	mvwprintw(dis, 14-vOffset, 1, "[,] and [.]");
-	mvwprintw(dis, 15-vOffset, 1, "[Return]");
-	mvwprintw(dis, 16-vOffset, 1, "[L]");
+	mvwprintw(dis, 13-vOffset, 1, "[LF] and [RT]");
+	mvwprintw(dis, 14-vOffset, 1, "[UP] and [DN]");
+	mvwprintw(dis, 15-vOffset, 1, "[,] and [.]");
+	mvwprintw(dis, 16-vOffset, 1, "[Return]");
+	mvwprintw(dis, 17-vOffset, 1, "[L]");
+	mvwprintw(dis, 18-vOffset, 1, "[PGUP] and [PGDN]");
+	mvwprintw(dis, 19-vOffset, 1, "[[] and []]");
 	wattroff(dis, A_BOLD);
 	
 	mvwprintw(dis, 8-vOffset, 16, "%s", TRAKKER_VERSION);
 	mvwprintw(dis, 9-vOffset, 16, "%s", xmp_version);
 	mvwprintw(dis, 11-vOffset, 16, "Play/Pause");
 	mvwprintw(dis, 12-vOffset, 16, "Change Tab");
-	mvwprintw(dis, 13-vOffset, 16, "Change Hori or Vert Display Offset");
-	mvwprintw(dis, 14-vOffset, 16, "Control volume");
-	mvwprintw(dis, 15-vOffset, 16, "Reset Display");
-	mvwprintw(dis, 16-vOffset, 16, "Toggle Loop");
+	mvwprintw(dis, 13-vOffset, 16, "Change horizontal offset.");
+	mvwprintw(dis, 14-vOffset, 16, "Change vertical offset.");
+	mvwprintw(dis, 15-vOffset, 16, "Control volume");
+	mvwprintw(dis, 16-vOffset, 16, "Reset Display");
+	mvwprintw(dis, 17-vOffset, 16, "Toggle Loop");
+	mvwprintw(dis, 18-vOffset, 16, "Scroll vertically per page.");
+	mvwprintw(dis, 19-vOffset, 16, "Change stereo mixing.");
 }
 
 void renderRows(xmp_module_info *mi, xmp_frame_info *fi) {
